@@ -112,12 +112,19 @@ public class OptionsWindow implements Window {
     private void setParams(Command command) {
 
         Object[] params = new Object[paramFields.size()];
-
-        for (int i = 0; i < paramFields.size(); i++) {
-            String text = paramFields.get(i).getText();
-            params[i] = stringToParam(text, commandType.params[i]);
+        String[] paramStrings = getAllFieldText();
+        for(int i = 0; i < paramStrings.length; i++) {
+            params[i] = stringToParam(paramStrings[i], command.getCommandType().params[i]);
         }
         command.setParameterArray(params);
+    }
+
+    private String[] getAllFieldText() {
+        String[] paramStrings = new String[paramFields.size()];
+        for (int i = 0; i < paramFields.size(); i++) {
+            paramStrings[i] =  paramFields.get(i).getText();
+        }
+        return paramStrings;
     }
 
     private Object stringToParam(String s, ParamType p) {
