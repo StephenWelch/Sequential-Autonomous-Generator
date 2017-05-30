@@ -62,7 +62,6 @@ public class SelectorWindow implements Window {
         gridLayout.setPadding(new Insets(LAYOUT_PADDING_TOP, LAYOUT_PADDING_RIGHT, LAYOUT_PADDING_BOTTOM, LAYOUT_PADDING_LEFT));
         gridLayout.setHgap(HORIZ_CELL_PADDING); //Set horizontal/vertical padding for layout cells
         gridLayout.setVgap(VERT_CELL_PADDING);
-        gridLayout.setGridLinesVisible(true);
 
         commandListing = new ListView<>();
         commandListing.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -138,7 +137,10 @@ public class SelectorWindow implements Window {
     }
 
     public void addToRunList(Command command) {
-        runListing.getItems().add(command);
+
+        int selectedIndex = runListing.getSelectionModel().getSelectedIndex();
+        runListing.getItems().add(selectedIndex, command);
+
     }
 
     private void removeFromRunList() {
