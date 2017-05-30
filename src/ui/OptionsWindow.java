@@ -14,19 +14,11 @@ import java.util.List;
 /**
  * Created by Stephen Welch on 5/19/2017.
  */
-public class OptionsWindow implements Window {
+public class OptionsWindow extends Window {
 
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
     public static final String WINDOW_TITLE = "Autonomous Generator";
-
-    private static final int LAYOUT_PADDING_TOP = 10;
-    private static final int LAYOUT_PADDING_RIGHT = 10;
-    private static final int LAYOUT_PADDING_BOTTOM = 10;
-    private static final int LAYOUT_PADDING_LEFT = 10;
-
-    private static final int HORIZ_CELL_PADDING = 10;
-    private static final int VERT_CELL_PADDING = 10;
 
     private Stage window;
     SelectorWindow prevWindow;
@@ -41,6 +33,8 @@ public class OptionsWindow implements Window {
     private CommandType commandType;
 
     public OptionsWindow(Stage window, SelectorWindow prevWindow, Command command) {
+        super(window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+        
         this.window = window;
         this.prevWindow = prevWindow;
         this.command = command;

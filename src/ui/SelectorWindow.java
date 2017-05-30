@@ -24,19 +24,11 @@ import java.util.Map;
 /**
  * Created by Stephen Welch on 5/19/2017.
  */
-public class SelectorWindow implements Window {
+public class SelectorWindow extends Window {
 
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
     public static final String WINDOW_TITLE = "Autonomous Generator";
-
-    private static final int LAYOUT_PADDING_TOP = 10;
-    private static final int LAYOUT_PADDING_RIGHT = 10;
-    private static final int LAYOUT_PADDING_BOTTOM = 10;
-    private static final int LAYOUT_PADDING_LEFT = 10;
-
-    private static final int HORIZ_CELL_PADDING = 10;
-    private static final int VERT_CELL_PADDING = 10;
 
     private static final String GENERATED_FILE_PATH = "..\\Autonomous.java";
 
@@ -51,12 +43,12 @@ public class SelectorWindow implements Window {
     private List<Label> paramLabels;
 
     public SelectorWindow(Stage window) {
-        this.window = window;
+        super(window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
     public Scene display() {
 
-        window.setTitle(WINDOW_TITLE);
+        getWindow().setTitle(WINDOW_TITLE);
 
         gridLayout = new GridPane();
         gridLayout.setPadding(new Insets(LAYOUT_PADDING_TOP, LAYOUT_PADDING_RIGHT, LAYOUT_PADDING_BOTTOM, LAYOUT_PADDING_LEFT));
@@ -130,9 +122,9 @@ public class SelectorWindow implements Window {
     }
 
     private OptionsWindow openOptions(Command command) {
-        OptionsWindow optionsWindow = new OptionsWindow(window, this, command);
+        OptionsWindow optionsWindow = new OptionsWindow(getWindow(), this, command);
         Scene optionScene = optionsWindow.display();
-        window.setScene(optionScene);
+        getWindow().setScene(optionScene);
         return optionsWindow;
     }
 
