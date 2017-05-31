@@ -19,9 +19,8 @@ public class OptionsWindow extends Window {
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
     public static final String WINDOW_TITLE = "Autonomous Generator";
-
-    private Stage window;
     SelectorWindow prevWindow;
+    private Stage window;
     private Scene scene;
     private GridPane gridLayout;
     private Button backButton, saveButton;
@@ -34,7 +33,7 @@ public class OptionsWindow extends Window {
 
     public OptionsWindow(Stage window, SelectorWindow prevWindow, Command command) {
         super(window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
-        
+
         this.window = window;
         this.prevWindow = prevWindow;
         this.command = command;
@@ -60,7 +59,7 @@ public class OptionsWindow extends Window {
 
         saveButton = new Button("Save");
         saveButton.setOnAction(e -> {
-            if(command.getParameterArray().length <= 0) {
+            if (command.getParameterArray().length <= 0) {
                 setParams(command);
                 prevWindow.getRunListing().getItems().add(command);
             } else {
@@ -75,7 +74,7 @@ public class OptionsWindow extends Window {
             TextField field;
 
             //If command has parameters, display them in the text box. Otherwise, don't.
-            if(command.getParameterArray().length > 0) {
+            if (command.getParameterArray().length > 0) {
                 String parameterString = command.getParameterArray()[i].toString();
                 field = new TextField(parameterString);
             } else {
@@ -107,7 +106,7 @@ public class OptionsWindow extends Window {
 
         Object[] params = new Object[paramFields.size()];
         String[] paramStrings = getAllFieldText();
-        for(int i = 0; i < paramStrings.length; i++) {
+        for (int i = 0; i < paramStrings.length; i++) {
             params[i] = stringToParam(paramStrings[i], command.getCommandType().params[i]);
         }
         command.setParameterArray(params);
@@ -116,7 +115,7 @@ public class OptionsWindow extends Window {
     private String[] getAllFieldText() {
         String[] paramStrings = new String[paramFields.size()];
         for (int i = 0; i < paramFields.size(); i++) {
-            paramStrings[i] =  paramFields.get(i).getText();
+            paramStrings[i] = paramFields.get(i).getText();
         }
         return paramStrings;
     }

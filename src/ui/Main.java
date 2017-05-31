@@ -10,6 +10,10 @@ public class Main extends Application {
     private Scene selectScene;
     private SelectorWindow selectWindow;
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) throws Exception {
 
@@ -32,9 +36,5 @@ public class Main extends Application {
         //Run cleanup tasks
         System.out.println("Closing Window");
         window.close();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

@@ -16,7 +16,7 @@ public abstract class Window {
 
     public final int LAYOUT_PADDING_TOP;
     public final int LAYOUT_PADDING_RIGHT;
-    public  final int LAYOUT_PADDING_BOTTOM;
+    public final int LAYOUT_PADDING_BOTTOM;
     public final int LAYOUT_PADDING_LEFT;
 
     public final int HORIZ_CELL_PADDING;
@@ -37,6 +37,7 @@ public abstract class Window {
         this.LAYOUT_PADDING_LEFT = leftPadding;
         this.HORIZ_CELL_PADDING = horizCellPadding;
         this.VERT_CELL_PADDING = vertCellPadding;
+        init();
     }
 
     public Window(Stage window, String title, int width, int height) {
@@ -58,16 +59,16 @@ public abstract class Window {
         return scene;
     }
 
+    public void setScene(Scene scene) {
+        this.scene = scene;
+    }
+
     public Stage getWindow() {
         return window;
     }
 
     public void setWindow(Stage window) {
         this.window = window;
-    }
-
-    public void setScene(Scene scene) {
-        this.scene = scene;
     }
 
     public GridPane getLayout() {

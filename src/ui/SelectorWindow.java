@@ -1,21 +1,16 @@
 package ui;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,28 +27,16 @@ public class SelectorWindow extends Window {
 
     private static final String GENERATED_FILE_PATH = "..\\Autonomous.java";
 
-    private Stage window;
-    private Scene scene;
-    private GridPane gridLayout;
-
     private Map<String, CommandType> commandMap = initMap();
     private ListView<String> commandListing;
     private ListView<Command> runListing;
-    private Button addButton, removeButton, refreshButton, generateButton, optionsButton;
-    private List<Label> paramLabels;
+    private Button addButton, removeButton, refreshButton, generateButton, optionsButton, fieldButton;
 
     public SelectorWindow(Stage window) {
         super(window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
     public Scene display() {
-
-        getWindow().setTitle(WINDOW_TITLE);
-
-        gridLayout = new GridPane();
-        gridLayout.setPadding(new Insets(LAYOUT_PADDING_TOP, LAYOUT_PADDING_RIGHT, LAYOUT_PADDING_BOTTOM, LAYOUT_PADDING_LEFT));
-        gridLayout.setHgap(HORIZ_CELL_PADDING); //Set horizontal/vertical padding for layout cells
-        gridLayout.setVgap(VERT_CELL_PADDING);
 
         commandListing = new ListView<>();
         commandListing.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -87,7 +70,11 @@ public class SelectorWindow extends Window {
         optionsButton = new Button("Options");
         optionsButton.setOnAction(e -> {
             Command selectedCommand = runListing.getSelectionModel().getSelectedItem();
-            OptionsWindow optionsWindow = openOptions(selectedCommand);
+            try {
+                openOptions(selectedCommand);
+            } catch (NullPointerException exception) {
+                System.err.println("OptionsWindow cannot open a null command.");
+            }
         });
         GridPane.setConstraints(optionsButton, 2, 3);
 
@@ -95,11 +82,15 @@ public class SelectorWindow extends Window {
         refreshButton.setOnAction(e -> runListing.refresh());
         GridPane.setConstraints(refreshButton, 2, 4);
 
-        gridLayout.getChildren().addAll(commandListing, addButton, removeButton, runListing, refreshButton, generateButton, optionsButton);
+        fieldButton = new Button("Field View");
+        fieldButton.setOnAction(e -> getWindow().setScene(openField()));
+        GridPane.setConstraints(fieldButton, 2, 5);
 
-        scene = new Scene(gridLayout, WINDOW_WIDTH, WINDOW_HEIGHT);
+        getLayout().getChildren().addAll(commandListing, addButton, removeButton, runListing, refreshButton, generateButton, optionsButton, fieldButton);
 
-        return scene;
+        setScene(new Scene(getLayout(), WINDOW_WIDTH, WINDOW_HEIGHT));
+
+        return getScene();
 
     }
 
@@ -121,18 +112,22 @@ public class SelectorWindow extends Window {
         runListing.getSelectionModel().getSelectedItem();
     }
 
-    private OptionsWindow openOptions(Command command) {
+    private OptionsWindow openOptions(Command command) throws NullPointerException {
+        if (command == null) throw new NullPointerException();
         OptionsWindow optionsWindow = new OptionsWindow(getWindow(), this, command);
         Scene optionScene = optionsWindow.display();
         getWindow().setScene(optionScene);
         return optionsWindow;
     }
 
-    public void addToRunList(Command command) {
+    private Scene openField() {
+        FieldWindow fieldWindow = new FieldWindow(getWindow(), this);
+        return fieldWindow.display();
+    }
 
+    public void addToRunList(Command command) {
         int selectedIndex = runListing.getSelectionModel().getSelectedIndex();
         runListing.getItems().add(selectedIndex, command);
-
     }
 
     private void removeFromRunList() {
@@ -146,6 +141,12 @@ public class SelectorWindow extends Window {
         return runListing;
     }
 
+    public void setRunListing(List<Command> runListing) {
+        ObservableList<Command> observableList = FXCollections.observableArrayList(runListing);
+        this.runListing.setItems(observableList);
+        this.runListing.refresh();
+    }
+
     private Map<String, CommandType> initMap() {
         Map<String, CommandType> map = new HashMap<>();
         for (CommandType c : CommandType.values()) {
@@ -153,10 +154,6 @@ public class SelectorWindow extends Window {
         }
         return map;
 
-    }
-
-    public Scene getScene() {
-        return scene;
     }
 
 }

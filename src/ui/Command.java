@@ -35,7 +35,7 @@ public class Command {
             String givenTypePackageName = parameterArray[i].getClass().getName();
             String requiredTypePackageName = commandType.params[i].packageName;
 
-            if(!givenTypePackageName.equals(requiredTypePackageName)) return false;
+            if (!givenTypePackageName.equals(requiredTypePackageName)) return false;
         }
 
         return true;
@@ -59,7 +59,7 @@ public class Command {
     private String generateParamString(Object[] params) {
         String paramString = "";
 
-        if(params.length <= 0) return paramString;
+        if (params.length <= 0) return paramString;
         if (params.length <= 1) return params[0].toString();
 
         for (Object o : params) {
@@ -73,9 +73,12 @@ public class Command {
         return commandType;
     }
 
+    public Object[] getParameterArray() {
+        return parameterArray;
+    }
+
     public void setParameterArray(Object... parameterArray) {
         this.parameterArray = parameterArray;
     }
-    public Object[] getParameterArray() { return parameterArray; }
 
 }
