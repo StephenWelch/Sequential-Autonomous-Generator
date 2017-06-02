@@ -1,5 +1,6 @@
 package ui;
 
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -8,7 +9,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -21,54 +24,54 @@ import java.util.List;
 public class FieldWindow extends Window {
 
     private static final String WINDOW_TITLE = "Field UI";
-    private static final int WINDOW_WIDTH = 1024;
-    private static final int WINDOW_HEIGHT = 576;
+    private static final int WINDOW_WIDTH = 825;
+    private static final int WINDOW_HEIGHT = 535;
+
     private static final int TEXT_X_OFFSET = 8;
     private static final int TEXT_Y_OFFSET = 8;
-    private static final double DEFAULT_PPI = 0.71806167400881057268722466960352;
-    private static final double DEFAULT_STARTING_X_INCHES = 0;
-    private static final double DEFAULT_STARTING_Y_INCHES = 52;
-    private static final double NEAR_TO_ZERO = 1;
+    private static final Color START_MARKER_COLOR = Color.GREEN;
+    private static final double START_MARKER_RADIUS = 20;
+    private static final Color LINE_COLOR = Color.RED;
+    private static final Color TEXT_COLOR = Color.BLACK;
+    private static final double DEFAULT_STARTING_X_INCHES = 50;
+    private static final double DEFAULT_STARTING_Y_INCHES = 310;
+    private static final double FIELD_LENGTH_INCHES = 652;
+    private double ppi;
+
+    private static final double ANGLE_ERROR_TOLERANCE = 3;
 
     private Canvas fieldCanvas;
     private GraphicsContext canvasGraphics;
 
     private Image fieldImage;
-    private Label ppiLabel, startXLabel, startYLabel;
+    private Label ppiLabel, startXLabel, startYLabel, mousePosLabel;
     private TextField ppiField, startXInchesField, startYInchesField;
-    private Button undoButton, redoButton, backButton;
+    private Button undoButton, redoButton, backButton, resetButton;
+    private HBox configLayout, optionsLayout;
 
     private LinkedList<ExtendedLine> lineList, removedLineList;
-    private boolean addingLine;
-    private boolean shouldRender;
     private SelectorWindow prevWindow;
 
     public FieldWindow(Stage window, SelectorWindow prevWindow) {
         super(window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
         this.lineList = new LinkedList<>();
         this.removedLineList = new LinkedList<>();
-        this.addingLine = false;
         this.prevWindow = prevWindow;
-
     }
 
     public Scene display() {
 
-        fieldImage = new Image(getClass().getResourceAsStream("field.jpg"), 800, 600, true, true);
+        fieldImage = new Image(getClass().getResourceAsStream("field.png"), 800, 600, true, true);
 
         fieldCanvas = new Canvas(fieldImage.getWidth(), fieldImage.getHeight());
-        fieldCanvas.setOnMouseClicked(e -> {
-            shouldRender = (lineList.peekLast() == null) ? false : true;
-            updateLineList(lineList, e.getX(), e.getY());
-            //Render last line in updated list
-            //We don't want to render the first line, since it will appear as a line from (0,0) to (x,y) until another point is clicked
-            if (shouldRender) render(lineList.peekLast());
-        });
+
         canvasGraphics = fieldCanvas.getGraphicsContext2D();
         canvasGraphics.drawImage(fieldImage, 0, 0, fieldImage.getWidth(), fieldImage.getHeight());
+        ppi = FIELD_LENGTH_INCHES / fieldImage.getWidth();
+
 
         ppiLabel = new Label("Set PPI: ");
-        ppiField = new TextField(Double.toString(DEFAULT_PPI));
+        ppiField = new TextField(Double.toString(ppi));
         ppiField.setPrefWidth(50);
 
         startXLabel = new Label("Starting X (inches): ");
@@ -78,35 +81,55 @@ public class FieldWindow extends Window {
         startYInchesField = new TextField(Double.toString(DEFAULT_STARTING_Y_INCHES));
 
         undoButton = new Button("Undo");
-        undoButton.setOnAction(e -> {
-            if (lineList.peekLast() != null) removedLineList.addFirst(lineList.removeLast());
-            refreshCanvas(fieldCanvas, fieldImage, lineList);
-        });
         redoButton = new Button("Redo");
+        backButton = new Button("Back");
+        resetButton = new Button("Reset");
+        mousePosLabel = new Label();
+
+        configLayout = new HBox();
+        configLayout.setSpacing(9);
+        configLayout.setPadding(new Insets(0, 10, 0, 0));
+
+
+        optionsLayout = new HBox();
+        optionsLayout.setSpacing(9);
+        optionsLayout.setPadding(new Insets(0, 10, 0, 0));
+
+        //Initial render
+        refreshCanvas(fieldCanvas, fieldImage, lineList, new Circle(getStartingPosX(), getStartingPosY(), START_MARKER_RADIUS), START_MARKER_COLOR, LINE_COLOR, TEXT_COLOR);
+        fieldCanvas.setOnMouseClicked(e -> {
+            updateLineList(lineList, e.getX(), e.getY());
+            refreshCanvas(fieldCanvas, fieldImage, lineList, new Circle(getStartingPosX(), getStartingPosY(), START_MARKER_RADIUS), START_MARKER_COLOR, LINE_COLOR, TEXT_COLOR);
+        });
+        fieldCanvas.setOnMouseMoved(e -> mousePosLabel.setText("X: " + round(pixelsToInches(e.getX())) + " Y: " + round(pixelsToInches(e.getY()))));
+
         redoButton.setOnAction(e -> {
             if (removedLineList.peek() != null) lineList.add(removedLineList.poll());
-            refreshCanvas(fieldCanvas, fieldImage, lineList);
+            refreshCanvas(fieldCanvas, fieldImage, lineList, new Circle(getStartingPosX(), getStartingPosY(), START_MARKER_RADIUS), START_MARKER_COLOR, LINE_COLOR, TEXT_COLOR);
         });
 
-        backButton = new Button("Back");
+        undoButton.setOnAction(e -> {
+            if (lineList.peekLast() != null) removedLineList.addFirst(lineList.removeLast());
+            refreshCanvas(fieldCanvas, fieldImage, lineList, new Circle(getStartingPosX(), getStartingPosY(), START_MARKER_RADIUS), START_MARKER_COLOR, LINE_COLOR, TEXT_COLOR);
+        });
+
         backButton.setOnAction(e -> {
             prevWindow.setRunListing(getCommandList());
             getWindow().setScene(prevWindow.getScene());
         });
 
+        resetButton.setOnAction(e -> {
+            lineList.clear();
+            refreshCanvas(fieldCanvas, fieldImage, lineList, new Circle(getStartingPosX(), getStartingPosY(), START_MARKER_RADIUS), START_MARKER_COLOR, LINE_COLOR, TEXT_COLOR);
+        });
 
-        GridPane.setConstraints(fieldCanvas, 2, 0);
-        GridPane.setConstraints(ppiLabel, 0, 0);
-        GridPane.setConstraints(ppiField, 1, 0);
-        GridPane.setConstraints(undoButton, 0, 1);
-        GridPane.setConstraints(redoButton, 0, 2);
-        GridPane.setConstraints(backButton, 0, 3);
-        GridPane.setConstraints(startXLabel, 0, 4);
-        GridPane.setConstraints(startYLabel, 0, 5);
-        GridPane.setConstraints(startXInchesField, 1, 4);
-        GridPane.setConstraints(startYInchesField, 1, 5);
+        GridPane.setConstraints(fieldCanvas, 0, 0);
+        GridPane.setConstraints(configLayout, 0, 1);
+        GridPane.setConstraints(optionsLayout, 0, 2);
 
-        getLayout().getChildren().addAll(fieldCanvas, ppiLabel, ppiField, undoButton, redoButton, backButton, startXLabel, startYLabel, startXInchesField, startYInchesField);
+        optionsLayout.getChildren().addAll(backButton, undoButton, redoButton, resetButton);
+        configLayout.getChildren().addAll(ppiLabel, ppiField, startXLabel, startXInchesField, startYLabel, startYInchesField, mousePosLabel);
+        getLayout().getChildren().addAll(fieldCanvas, configLayout, optionsLayout);
 
         setScene(new Scene(getLayout(), WINDOW_WIDTH, WINDOW_HEIGHT));
         return getScene();
@@ -118,13 +141,11 @@ public class FieldWindow extends Window {
 
         for (ExtendedLine l : lineList) {
 
-            Object[] angle = {l.getAngleToPrev()};
+            Object[] angle = {l.getAngleToPrev(), ANGLE_ERROR_TOLERANCE};
             Object[] distance = {l.getLengthInches(getPPI())};
 
-            //if (!isWithinError(l.getAngleToPrev(), NEAR_TO_ZERO))
-                list.add(new Command(CommandType.TURN, angle));
-            //if (!isWithinError(l.getLengthInches(getPPI()), NEAR_TO_ZERO))
-                list.add(new Command(CommandType.MOVE, distance));
+            list.add(new Command(CommandType.TURN, angle));
+            list.add(new Command(CommandType.MOVE, distance));
 
         }
 
@@ -136,16 +157,11 @@ public class FieldWindow extends Window {
         ExtendedLine line = lineList.peekLast();
 
         if (line == null) {
-            System.out.println("Set origin, adding new line.");
-            ExtendedLine rootLine = new ExtendedLine(x, y);
+            System.out.println("Starting chain");
+            ExtendedLine rootLine = new ExtendedLine(null, getStartingPosX(), getStartingPosY(), x, y);
             lineList.add(rootLine);
-            addingLine = true;
-        } else if (addingLine) {
-            System.out.println("Set endpoint, drawing.");
-            line.setEndX(x);
-            line.setEndY(y);
-            addingLine = false;
-        } else if (addingLine == false) {
+        } else {
+            System.out.println("Adding to chain");
             //Grab last line
             ExtendedLine lineToAdd = new ExtendedLine(lineList.get(lineList.size() - 1), x, y);
             lineList.add(lineToAdd);
@@ -153,29 +169,46 @@ public class FieldWindow extends Window {
 
     }
 
-    private void refreshCanvas(Canvas canvas, Image img, LinkedList<ExtendedLine> lineList) {
+    private void refreshCanvas(Canvas canvas, Image img, LinkedList<ExtendedLine> lineList, Circle startMarker, Color startMarkerColor, Color pathColor, Color textColor) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         gc.drawImage(img, 0, 0, canvas.getWidth(), canvas.getHeight());
-        render(lineList);
-    }
-
-    private void render(LinkedList<ExtendedLine> lineList) {
         for (ExtendedLine l : lineList) {
-            render(l);
+            renderLine(l, pathColor, textColor, TEXT_X_OFFSET, TEXT_Y_OFFSET);
         }
+        drawCircle(startMarker, startMarkerColor, canvasGraphics);
     }
 
-    private void render(ExtendedLine line) {
-        drawLine(line, canvasGraphics);
-        canvasGraphics.setStroke(Color.WHITE);
-        canvasGraphics.fillText(Double.toString(round(line.getAngleToPrev())) + "°", line.getStartX() + TEXT_Y_OFFSET, line.getStartY());
-        canvasGraphics.fillText(Double.toString(round(line.getLengthInches(getPPI()))) + "\"", line.getMidpointX() + TEXT_X_OFFSET, line.getMidpointY());
+    private void renderLine(ExtendedLine line, Color lineColor, Color textColor, double textOffsetX, double textOffsetY) {
+        if(line != null) drawLine(line, lineColor, canvasGraphics);
+        drawText(Double.toString(round(line.getAngleToPrev())) + "°", textColor, line.getStartX() + textOffsetY,  line.getStartY(), canvasGraphics);
+        drawText(Double.toString(round(line.getLengthInches(getPPI()))) + "\"", textColor, line.getMidpointX() + textOffsetX, line.getMidpointY(), canvasGraphics);
     }
 
-    private void drawLine(ExtendedLine line, GraphicsContext gc) {
-        gc.setStroke(Color.RED);
+    private void drawCircle(Circle circle, Color color, GraphicsContext gc) {
+        gc.setStroke(color);
+        //Because oval takes coordinates for the top-left corner, we have to adjust the circle's coordinates
+        double trueCenterX = circle.getCenterX() - (circle.getRadius() / 2);
+        double trueCenterY = circle.getCenterY() - (circle.getRadius() / 2);
+        gc.strokeOval(trueCenterX, trueCenterY, circle.getRadius(), circle.getRadius());
+    }
+
+    private void drawLine(ExtendedLine line, Color color, GraphicsContext gc) {
+        gc.setStroke(color);
         gc.strokeLine(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
+    }
+
+    private void drawText(String text, Color color, double x, double y, GraphicsContext gc) {
+        gc.setFill(Color.WHITE);
+        gc.fillText(text, x, y);
+    }
+
+    public double getStartingPosX() {
+        return inchesToPixels(Double.valueOf(startXInchesField.getText()));
+    }
+
+    public double getStartingPosY() {
+        return inchesToPixels(Double.valueOf(startYInchesField.getText()));
     }
 
     private double inchesToPixels(double inches) {

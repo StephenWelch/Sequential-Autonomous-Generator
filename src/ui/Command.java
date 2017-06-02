@@ -7,6 +7,7 @@ import java.io.IOException;
  */
 public class Command {
 
+    private static final String PARAM_SEPERATOR = ", ";
     private CommandType commandType;
     private String code;
     private Object[] parameterArray;
@@ -32,6 +33,7 @@ public class Command {
     private boolean checkParamValidity() {
 
         for (int i = 0; i < commandType.params.length; i++) {
+            System.out.println(parameterArray[i].toString());
             String givenTypePackageName = parameterArray[i].getClass().getName();
             String requiredTypePackageName = commandType.params[i].packageName;
 
@@ -49,11 +51,11 @@ public class Command {
 
 
     private String insertParams(String code, String parameterString) {
-        String firstLine = code.substring(0, code.indexOf("{"));
+        String firstLine = code.substring(0, code.indexOf(";"));
         String first = firstLine.substring(0, firstLine.indexOf("(") + 1);
         String last = code.substring(firstLine.lastIndexOf(")"), code.length());
 
-        return first + parameterString + last;
+        return first + getCommandType().unusedParams + parameterString + last;
     }
 
     private String generateParamString(Object[] params) {
@@ -63,9 +65,9 @@ public class Command {
         if (params.length <= 1) return params[0].toString();
 
         for (Object o : params) {
-            paramString += o.toString();
+            paramString += o.toString() + PARAM_SEPERATOR;
         }
-        paramString = paramString.substring(0, paramString.length() - 1);
+        paramString = paramString.substring(0, paramString.length() - PARAM_SEPERATOR.length());
         return paramString;
     }
 

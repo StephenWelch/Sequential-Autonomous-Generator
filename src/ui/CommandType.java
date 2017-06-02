@@ -6,14 +6,16 @@ package ui;
 
 public enum CommandType {
 
-    TURN("Turn", "public void turn(double degrees) {}", ParamType.Double), MOVE("Move", "public void move(double inches) {}", ParamType.Double);
+    TURN("Turn", "new TurnToDegree(driveTrain, navx, angle);", "driveTrain, navx, ", ParamType.Double, ParamType.Double), MOVE("Move", "new DriveStraightDistance(driveTrain, navx,  distance);", "driveTrain, navx, ", ParamType.Double);
 
     String name, code;
     ParamType[] params;
+    String unusedParams;
 
-    CommandType(String name, String code, ParamType... params) {
+    CommandType(String name, String code, String unusedParams, ParamType... params) {
         this.name = name;
         this.code = code;
+        this.unusedParams = unusedParams;
         this.params = params;
     }
 

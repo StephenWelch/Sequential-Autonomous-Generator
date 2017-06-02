@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -20,9 +21,6 @@ public class OptionsWindow extends Window {
     public static final int WINDOW_HEIGHT = 600;
     public static final String WINDOW_TITLE = "Autonomous Generator";
     SelectorWindow prevWindow;
-    private Stage window;
-    private Scene scene;
-    private GridPane gridLayout;
     private Button backButton, saveButton;
 
     private List<Label> paramLabels;
@@ -34,7 +32,6 @@ public class OptionsWindow extends Window {
     public OptionsWindow(Stage window, SelectorWindow prevWindow, Command command) {
         super(window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        this.window = window;
         this.prevWindow = prevWindow;
         this.command = command;
 
@@ -45,28 +42,8 @@ public class OptionsWindow extends Window {
 
     public Scene display() {
 
-        gridLayout = new GridPane();
-        gridLayout.setPadding(new Insets(LAYOUT_PADDING_TOP, LAYOUT_PADDING_RIGHT, LAYOUT_PADDING_BOTTOM, LAYOUT_PADDING_LEFT));
-        gridLayout.setHgap(HORIZ_CELL_PADDING); //Set horizontal/vertical padding for layout cells
-        gridLayout.setVgap(VERT_CELL_PADDING);
-
         backButton = new Button("Back");
-        backButton.setOnAction(e -> {
-            prevWindow.getRunListing().refresh();
-            window.setScene(prevWindow.getScene());
-        });
-        GridPane.setConstraints(backButton, 0, 3);
-
         saveButton = new Button("Save");
-        saveButton.setOnAction(e -> {
-            if (command.getParameterArray().length <= 0) {
-                setParams(command);
-                prevWindow.getRunListing().getItems().add(command);
-            } else {
-                setParams(command);
-            }
-        });
-        GridPane.setConstraints(saveButton, 1, 3);
 
         //Create Labels and Fields for each parameter of the given CommandType
         for (int i = 0; i < commandType.params.length; i++) {
@@ -88,17 +65,30 @@ public class OptionsWindow extends Window {
             GridPane.setConstraints(field, 1, i + 1);
         }
 
-        for (Label l : paramLabels) {
-            gridLayout.getChildren().add(l);
-        }
-        for (TextField t : paramFields) {
-            gridLayout.getChildren().add(t);
-        }
+        for (Label l : paramLabels) getLayout().getChildren().add(l);
+        for (TextField t : paramFields) getLayout().getChildren().add(t);
 
-        gridLayout.getChildren().addAll(backButton, saveButton);
+        backButton.setOnAction(e -> {
+            prevWindow.getRunListing().refresh();
+            getWindow().setScene(prevWindow.getScene());
+        });
 
-        scene = new Scene(gridLayout, WINDOW_WIDTH, WINDOW_HEIGHT);
-        return scene;
+        saveButton.setOnAction(e -> {
+            if (command.getParameterArray().length <= 0) {
+                setParams(command);
+                prevWindow.getRunListing().getItems().add(command);
+            } else {
+                setParams(command);
+            }
+        });
+
+        GridPane.setConstraints(backButton, 0, 3);
+        GridPane.setConstraints(saveButton, 1, 3);
+
+        getLayout().getChildren().addAll(backButton, saveButton);
+
+        setScene(new Scene(getLayout(), WINDOW_WIDTH, WINDOW_HEIGHT));
+        return getScene();
 
     }
 
@@ -135,10 +125,6 @@ public class OptionsWindow extends Window {
                 break;
         }
         return param;
-    }
-
-    public Scene getScene() {
-        return scene;
     }
 
 }

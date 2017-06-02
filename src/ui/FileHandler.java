@@ -15,6 +15,7 @@ public class FileHandler {
 
     public static void writeListToFile(List list, String filePath) {
         Path file = Paths.get(filePath);
+        System.out.println(filePath);
         try {
             Files.write(file, list, Charset.forName("UTF-8"));
             Files.write(file, list, Charset.forName("UTF-8"), StandardOpenOption.CREATE);

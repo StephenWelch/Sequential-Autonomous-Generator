@@ -29,8 +29,9 @@ public class ExtendedLine extends Line {
         if (prevLine == null) {
             double baseX = endX;
             double baseY = getStartY();
-            double baseToEndDist = getDistance(endX, endY, baseX, baseY);
-            angleToPrev = Math.asin(length / baseToEndDist);
+            double length = baseX - getStartX();
+            double height = getEndY() - baseY;
+            angleToPrev = Math.atan(height / length);
         }
     }
 

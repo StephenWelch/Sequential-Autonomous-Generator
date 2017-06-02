@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="AutonomousGenerator:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/AutonomousGenerator_jar</output-path>
+    <root id="archive" name="AutonomousGenerator.jar">
+      <element id="module-output" name="AutonomousGenerator" />
+    </root>
+  </artifact>
+</component>
